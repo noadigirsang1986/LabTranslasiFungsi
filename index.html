@@ -1,0 +1,519 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lab Translasi Fungsi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: meja kerja kertas grafik — panel kendali di kiri, bidang kartesius di kanan, analisis di bawah */
+:root{
+  --paper:#f3f6fb; --surface:#ffffff; --ink:#14233d; --muted:#5b6b86; --line:#d5deeb;
+  --grid:#e2e9f3; --grid-strong:#c7d3e4; --axis:#14233d;
+  --accent:#0d7a6f; --accent-soft:#d6efeb; --vector:#c2410c; --target:#b7791f; --original:#8a98b0;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0e1522; --surface:#151f30; --ink:#e6edf7; --muted:#9aa9c0; --line:#26344b;
+  --grid:#1b2739; --grid-strong:#2a3a54; --axis:#c9d5e6;
+  --accent:#3fc7b5; --accent-soft:#15373a; --vector:#fb8a4c; --target:#f0b44c; --original:#6f7f99;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#0e1522; --surface:#151f30; --ink:#e6edf7; --muted:#9aa9c0; --line:#26344b;
+  --grid:#1b2739; --grid-strong:#2a3a54; --axis:#c9d5e6;
+  --accent:#3fc7b5; --accent-soft:#15373a; --vector:#fb8a4c; --target:#f0b44c; --original:#6f7f99;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,4.5vw,42px);line-height:1.05;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--accent)}
+.formula-hero{font-family:var(--f-mono);font-size:15px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.formula-hero b{color:var(--accent)}
+h2{font-family:var(--f-display);font-weight:700;font-size:18px;margin:0 0 10px}
+.lab{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:860px){.lab{grid-template-columns:minmax(0,1fr)}}
+.panel{display:flex;flex-direction:column;gap:18px;min-width:0}
+.block{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.chip{font:inherit;font-size:13.5px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:7px;padding:8px 6px;cursor:pointer;text-align:center;line-height:1.2}
+.chip small{display:block;font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:3px}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.chip[aria-pressed="true"] small{color:var(--surface);opacity:.85}
+.chip:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--vector);outline-offset:2px}
+.slider{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.slider + .slider{margin-top:12px}
+.slider label{font-family:var(--f-mono);font-weight:600;font-size:15px;width:22px}
+.slider output{font-family:var(--f-mono);font-variant-numeric:tabular-nums;min-width:52px;text-align:right;font-weight:600}
+.slider .hint{grid-column:1/-1;font-size:12.5px;color:var(--muted);margin-top:-4px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{font:inherit;font-size:13.5px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:7px;padding:7px 12px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.toggles{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px}
+.toggles label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.eq{font-family:var(--f-mono);font-size:15px;line-height:1.7;overflow-x:auto}
+.eq .lbl{color:var(--muted)}
+.eq .g{color:var(--accent);font-weight:600}
+.eq .f{color:var(--original)}
+.cases{display:inline-grid;grid-template-columns:auto auto;gap:0 14px;border-left:2px solid currentColor;padding-left:10px;vertical-align:middle}
+.vec{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:13.5px;color:var(--muted)}
+.vec .col{font-family:var(--f-mono);font-size:15px;color:var(--vector);font-weight:600;display:inline-flex;flex-direction:column;align-items:center;border-left:2px solid var(--vector);border-right:2px solid var(--vector);border-radius:6px;padding:2px 10px;line-height:1.3}
+.stage{min-width:0;display:flex;flex-direction:column;gap:10px}
+.canvas-box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px;position:relative}
+canvas{display:block;margin:0 auto;touch-action:none;cursor:grab;border-radius:6px}
+canvas.dragging{cursor:grabbing}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:22px;height:0;border-top:3px solid var(--accent)}
+.sw.o{border-top:2px dashed var(--original)}
+.sw.v{border-top:2px solid var(--vector)}
+.sw.t{border-top:3px dashed var(--target)}
+.sw.a{border-top:1.5px dashed var(--accent)}
+.analysis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media (max-width:960px){.analysis{grid-template-columns:minmax(0,1fr)}}
+dl.props{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
+dl.props dt{color:var(--muted)}
+dl.props dd{margin:0;font-family:var(--f-mono);font-size:13.5px}
+dl.props dd .from{color:var(--original)}
+dl.props dd .to{color:var(--accent);font-weight:600}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--f-body);font-size:12.5px;color:var(--muted);font-weight:700}
+td.to{color:var(--accent);font-weight:600}
+td.arrow{color:var(--vector)}
+p.note{margin:10px 0 0;font-size:13px;color:var(--muted);max-width:65ch}
+.challenge p{margin:0 0 10px;font-size:14px}
+.score{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.feedback{margin-top:10px;font-size:14px;min-height:1.5em}
+.feedback.ok{color:var(--accent);font-weight:700}
+.feedback.no{color:var(--vector)}
+.concept{font-size:14px;margin:0;max-width:65ch}
+.concept ul{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
+.form-line{font-family:var(--f-mono);font-size:14.5px;margin:0 0 12px;padding:8px 10px;background:var(--accent-soft);border-radius:7px;overflow-x:auto;white-space:nowrap}
+.coefs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.coef{display:grid;grid-template-columns:auto 34px minmax(0,1fr) 34px;gap:4px;align-items:center}
+.coef label{font-family:var(--f-mono);font-weight:600;min-width:20px}
+.coef input{font:600 14px var(--f-mono);width:100%;min-width:0;text-align:center;padding:6px 2px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
+.coef button{font:600 16px var(--f-mono);height:32px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);cursor:pointer;padding:0}
+.coef button:hover{border-color:var(--accent)}
+.coef .ch{grid-column:2/-1;font-size:11.5px;color:var(--muted);line-height:1.3}
+.warn{margin:10px 0 0;font-size:13px;color:var(--vector);font-weight:700}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Lab Matematika · SMA · Transformasi Fungsi</p>
+      <h1>Lab Translasi <em>Fungsi</em></h1>
+    </div>
+    <div class="formula-hero">g(x) = f(x <b>− h</b>) <b>+ k</b> &nbsp;·&nbsp; T = (h, k)</div>
+  </header>
+
+  <div class="lab">
+    <div class="panel">
+      <section class="block">
+        <h2>1. Pilih jenis fungsi</h2>
+        <div class="chips" id="chips" role="group" aria-label="Jenis fungsi"></div>
+      </section>
+
+      <section class="block">
+        <h2>2. Atur nilai fungsi asal</h2>
+        <p class="form-line" id="formLine"></p>
+        <div class="coefs" id="coefs"></div>
+        <p class="warn" id="warn" hidden></p>
+        <div class="row">
+          <button class="btn" id="coefReset" type="button">Nilai bawaan</button>
+          <button class="btn" id="coefRand" type="button">Nilai acak</button>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>3. Geser dengan slider</h2>
+        <div class="slider">
+          <label for="h">h</label>
+          <input type="range" id="h" min="-8" max="8" step="0.5" value="2">
+          <output id="hOut" for="h">2</output>
+          <span class="hint">h &gt; 0 geser ke kanan, h &lt; 0 geser ke kiri</span>
+        </div>
+        <div class="slider">
+          <label for="k">k</label>
+          <input type="range" id="k" min="-8" max="8" step="0.5" value="1">
+          <output id="kOut" for="k">1</output>
+          <span class="hint">k &gt; 0 geser ke atas, k &lt; 0 geser ke bawah</span>
+        </div>
+        <div class="row">
+          <button class="btn" id="reset" type="button">Kembalikan ke (0, 0)</button>
+          <button class="btn" id="rand" type="button">Translasi acak</button>
+        </div>
+        <div class="row toggles">
+          <label><input type="checkbox" id="tOrig" checked> Kurva asal f(x)</label>
+          <label><input type="checkbox" id="tVec" checked> Vektor translasi</label>
+          <label><input type="checkbox" id="tPts" checked> Titik tabel</label>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>4. Persamaan</h2>
+        <div class="eq" id="eq"></div>
+        <div class="vec"><span>Vektor translasi</span><span class="col" id="vecCol"><span>2</span><span>1</span></span><span id="vecTxt"></span></div>
+      </section>
+    </div>
+
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cv" aria-label="Bidang kartesius: grafik fungsi asal dan hasil translasi"></canvas></div>
+      <div class="legend">
+        <span><i class="sw"></i>g(x) hasil translasi</span>
+        <span><i class="sw o"></i>f(x) asal</span>
+        <span><i class="sw v"></i>vektor T</span>
+        <span><i class="sw a"></i>asimtot</span>
+        <span id="lgTarget" hidden><i class="sw t"></i>kurva target</span>
+      </div>
+      <p class="note" style="margin:0">Tip: seret grafik langsung di bidang kartesius untuk menggeser kurva. Nilai h dan k ikut berubah dengan kelipatan 0,5.</p>
+    </div>
+  </div>
+
+  <div class="analysis">
+    <section class="block">
+      <h2>Sifat sebelum → sesudah</h2>
+      <dl class="props" id="props"></dl>
+    </section>
+    <section class="block">
+      <h2>Pergeseran titik</h2>
+      <div class="tbl-wrap"><table id="tbl"></table></div>
+      <p class="note">Setiap titik (a, f(a)) pada f berpindah ke (a + h, f(a) + k) pada g.</p>
+    </section>
+    <section class="block challenge">
+      <h2>Tantangan: tebak translasinya</h2>
+      <p>Muncul kurva target bergaris oranye. Atur h dan k sampai kurva hijau menimpanya, lalu periksa.</p>
+      <div class="row" style="margin-top:0">
+        <button class="btn primary" id="cNew" type="button">Soal baru</button>
+        <button class="btn" id="cCheck" type="button" disabled>Periksa</button>
+        <button class="btn" id="cStop" type="button" disabled>Selesai</button>
+      </div>
+      <div class="feedback" id="cFb" aria-live="polite"></div>
+      <div class="score" id="cScore">Benar 0 dari 0 percobaan</div>
+    </section>
+  </div>
+
+  <section class="block">
+    <h2>Konsep kunci</h2>
+    <div class="concept" id="concept"></div>
+  </section>
+
+  <footer>
+    <span>Dikembangkan oleh Noadi Girsang, S.Pd.Gr · SMAN 2 Tangerang</span>
+    <span>noadigirsang21@guru.sma.belajar.id</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+const INF = Infinity;
+const r2 = n => Math.round(n*100)/100;
+const fmt = n => { if(!isFinite(n)) return '∞'; const r = r2(n); const a = Math.abs(r); const s = (a % 1 === 0) ? a.toString() : a.toString().replace('.', ','); return (r < 0 ? '−' : '') + s; };
+const inner = (h, paren=true) => h === 0 ? 'x' : (paren ? '(' : '') + 'x ' + (h > 0 ? '−' : '+') + ' ' + fmt(Math.abs(h)) + (paren ? ')' : '');
+const kp = k => k === 0 ? '' : ' ' + (k > 0 ? '+' : '−') + ' ' + fmt(Math.abs(k));
+const pt = (x,y) => '(' + fmt(x) + ', ' + fmt(y) + ')';
+// susun suku: [[koefisien, variabel], ...]
+function poly(terms){
+  let s='', first=true;
+  for(const [c,v] of terms){
+    if(c===0) continue; const neg=c<0, ab=r2(Math.abs(c));
+    const body = v==='' ? fmt(ab) : (ab===1 ? v : fmt(ab)+v);
+    s += first ? (neg?'−':'')+body : (neg?' − ':' + ')+body; first=false;
+  }
+  return s || '0';
+}
+const nT = terms => terms.filter(t=>t[0]!==0).length;
+const wrap = terms => nT(terms)>1 ? '('+poly(terms)+')' : poly(terms);
+const coefMul = a => a===1 ? '' : a===-1 ? '−' : fmt(a)+'·';
+const X = h => inner(h);
+
+// Setiap fungsi: parameter, potongan grafik (koordinat asal), rumus, sifat. Translasi diterapkan (x+h, y+k).
+const F = {
+  linear:{ name:'Linear', form:'f(x) = mx + c',
+    params:[{id:'m',def:1,hint:'gradien'},{id:'c',def:0,hint:'titik potong sumbu-y'}],
+    pieces:P=>[{a:-INF,b:INF,fn:x=>P.m*x+P.c}],
+    xs:()=>[-2,-1,0,1,2], anchor:P=>[0,P.c],
+    eq:(P,h,k)=> poly([[P.m,X(h)],[P.c+k,'']]) + (h!==0 ? ' <span class="lbl">= '+poly([[P.m,'x'],[P.c+k-P.m*h,'']])+'</span>' : ''),
+    props:(P,h,k)=>[['Domain','ℝ','ℝ'],['Range',P.m===0?'{'+fmt(P.c)+'}':'ℝ',P.m===0?'{'+fmt(P.c+k)+'}':'ℝ'],['Gradien',fmt(P.m),fmt(P.m)+' (tetap)'],['Potong sumbu-y',pt(0,P.c),pt(0,P.c+k-P.m*h)]],
+    note:'Gradien tidak berubah oleh translasi. Pada fungsi linear, geser kanan h satuan sama efeknya dengan turun m·h satuan, sehingga bentuk sederhananya mx + (c + k − m·h).'},
+  quadratic:{ name:'Kuadrat', form:'f(x) = ax² + bx + c',
+    params:[{id:'a',def:1,hint:'a ≠ 0, arah buka'},{id:'b',def:0},{id:'c',def:0}],
+    pieces:P=>[{a:-INF,b:INF,fn:x=>P.a*x*x+P.b*x+P.c}],
+    xs:P=>{const v=P.a?-P.b/(2*P.a):0; const xv=Math.round(v*2)/2; return [xv-2,xv-1,xv,xv+1,xv+2];},
+    anchor:P=>{ if(!P.a) return [0,P.c]; const xv=-P.b/(2*P.a); return [xv,P.a*xv*xv+P.b*xv+P.c]; },
+    eq:(P,h,k)=> poly([[P.a,X(h)+'²'],[P.b,X(h)],[P.c+k,'']]),
+    props:(P,h,k)=>{ if(!P.a) return [['Catatan','a = 0','bukan fungsi kuadrat']];
+      const xv=-P.b/(2*P.a), yv=P.a*xv*xv+P.b*xv+P.c, op=P.a>0?'≥':'≤';
+      return [['Domain','ℝ','ℝ'],['Range','y '+op+' '+fmt(yv),'y '+op+' '+fmt(yv+k)],['Titik puncak',pt(xv,yv),pt(xv+h,yv+k)],['Sumbu simetri','x = '+fmt(xv),'x = '+fmt(xv+h)],['Membuka',P.a>0?'ke atas':'ke bawah',P.a>0?'ke atas (tetap)':'ke bawah (tetap)']]; },
+    warn:P=>P.a===0?'a = 0 membuat fungsi ini menjadi linear.':'',
+    note:'Titik puncak (xₚ, yₚ) dengan xₚ = −b/(2a) berpindah ke (xₚ + h, yₚ + k). Nilai a (arah dan lebar parabola) tidak berubah.'},
+  polynomial:{ name:'Polinomial', form:'f(x) = ax³ + bx² + cx + d',
+    params:[{id:'a',def:1},{id:'b',def:0},{id:'c',def:-3},{id:'d',def:0}],
+    pieces:P=>[{a:-INF,b:INF,fn:x=>((P.a*x+P.b)*x+P.c)*x+P.d}],
+    xs:()=>[-2,-1,0,1,2],
+    anchor:P=>{ if(!P.a) return [0,P.d]; const xi=-P.b/(3*P.a); return [xi,((P.a*xi+P.b)*xi+P.c)*xi+P.d]; },
+    eq:(P,h,k)=> poly([[P.a,X(h)+'³'],[P.b,X(h)+'²'],[P.c,X(h)],[P.d+k,'']]),
+    props:(P,h,k)=>{ const f=x=>((P.a*x+P.b)*x+P.c)*x+P.d; const out=[['Domain','ℝ','ℝ']];
+      if(P.a){ const xi=-P.b/(3*P.a); out.push(['Range','ℝ','ℝ'],['Titik belok',pt(xi,f(xi)),pt(xi+h,f(xi)+k)]);
+        const A=3*P.a,B=2*P.b,C=P.c,D=B*B-4*A*C;
+        if(D>0){ [(-B-Math.sqrt(D))/(2*A),(-B+Math.sqrt(D))/(2*A)].forEach(x=>{ const t=(6*P.a*x+2*P.b)<0?'Maks. lokal':'Min. lokal'; out.push([t,pt(x,f(x)),pt(x+h,f(x)+k)]); }); }
+        else out.push(['Ekstrem lokal','tidak ada','tidak ada']);
+      } else out.push(['Catatan','a = 0','bukan derajat 3']);
+      return out; },
+    warn:P=>P.a===0?'a = 0 menurunkan derajat polinomial.':'',
+    note:'Titik belok, maksimum lokal, dan minimum lokal bergeser dengan vektor yang sama. Bentuk kurvanya tidak berubah.'},
+  exponential:{ name:'Eksponen', form:'f(x) = a · bˣ',
+    params:[{id:'a',def:1,hint:'a ≠ 0'},{id:'b',def:2,hint:'bilangan pokok, b > 0, b ≠ 1'}],
+    pieces:P=>[{a:-INF,b:INF,fn:x=>P.b>0?P.a*Math.pow(P.b,x):NaN}],
+    xs:()=>[-1,0,1,2,3], asym:()=>({y:0}), anchor:P=>[0,P.a],
+    eq:(P,h,k)=> coefMul(P.a)+fmt(P.b)+'<sup>'+inner(h,false)+'</sup>'+kp(k),
+    props:(P,h,k)=>{ const op=P.a>0?'>':'<'; return [['Domain','ℝ','ℝ'],['Range','y '+op+' 0','y '+op+' '+fmt(k)],['Asimtot datar','y = 0','y = '+fmt(k)],['Titik acuan',pt(0,P.a),pt(h,P.a+k)],['Sifat',P.b>1?'naik':'turun',P.b>1?'naik (tetap)':'turun (tetap)']]; },
+    warn:P=> P.b<=0?'Bilangan pokok b harus lebih dari 0.': P.b===1?'b = 1 membuat grafik berupa garis datar.': P.a===0?'a = 0 membuat grafik berupa garis datar.':'',
+    note:'Asimtot datar ikut bergeser sejauh k. Geseran h tidak mengubah asimtot datar, hanya menggeser kurva ke kiri atau kanan.'},
+  absolute:{ name:'Nilai mutlak', form:'f(x) = a|x| + c',
+    params:[{id:'a',def:1,hint:'kecuraman, tanda = arah'},{id:'c',def:0}],
+    pieces:P=>[{a:-INF,b:INF,fn:x=>P.a*Math.abs(x)+P.c}],
+    xs:()=>[-2,-1,0,1,2], anchor:P=>[0,P.c],
+    eq:(P,h,k)=> poly([[P.a,'|'+inner(h,false)+'|'],[P.c+k,'']]),
+    props:(P,h,k)=>{ const op=P.a>0?'≥':P.a<0?'≤':'='; return [['Domain','ℝ','ℝ'],['Range','y '+op+' '+fmt(P.c),'y '+op+' '+fmt(P.c+k)],['Titik sudut',pt(0,P.c),pt(h,P.c+k)],['Sumbu simetri','x = 0','x = '+fmt(h)]]; },
+    note:'Titik sudut grafik "V" berpindah ke (h, c + k). Perhatikan: |x − 3| berarti geser ke kanan 3, bukan ke kiri.'},
+  step:{ name:'Tangga', form:'f(x) = a⌊x⌋ + c',
+    params:[{id:'a',def:1,hint:'tinggi tiap anak tangga'},{id:'c',def:0}],
+    pieces:P=>{const p=[];for(let n=-30;n<30;n++){const y=P.a*n+P.c;p.push({a:n,b:n+1,fn:()=>y,startDot:'closed',endDot:'open'});}return p;},
+    base:P=>x=>P.a*Math.floor(x)+P.c,
+    xs:()=>[-2,-1,0,0.5,1,2], anchor:P=>[0,P.c],
+    eq:(P,h,k)=> poly([[P.a,'⌊'+inner(h,false)+'⌋'],[P.c+k,'']]),
+    props:(P,h,k)=>[['Domain','ℝ','ℝ'],['Range','{ '+poly([[P.a,'n'],[P.c,'']])+' | n ∈ ℤ }','{ '+poly([[P.a,'n'],[P.c+k,'']])+' | n ∈ ℤ }'],['Lompatan di','x = n','x = n'+kp(h)],['Titik acuan',pt(0,P.c),pt(h,P.c+k)]],
+    note:'⌊x⌋ adalah bilangan bulat terbesar yang ≤ x. Titik penuh berarti nilai termasuk, titik kosong berarti tidak termasuk. Jika h bukan bilangan bulat, posisi lompatan ikut bergeser.'},
+  piecewise:{ name:'Piecewise', form:'f(x) = { mx + c, x < p ; ax² + d, x ≥ p }',
+    params:[{id:'m',def:-1,hint:'aturan kiri'},{id:'c',def:-1,hint:'aturan kiri'},{id:'a',def:1,hint:'aturan kanan'},{id:'d',def:0,hint:'aturan kanan'},{id:'p',def:0,hint:'batas aturan'}],
+    pieces:P=>[{a:-INF,b:P.p,fn:x=>P.m*x+P.c,endDot:'open'},{a:P.p,b:INF,fn:x=>P.a*x*x+P.d,startDot:'closed'}],
+    xs:P=>[P.p-2,P.p-1,P.p,P.p+1,P.p+2], anchor:P=>[P.p,P.a*P.p*P.p+P.d],
+    eq:(P,h,k)=> '<span class="cases"><span>'+poly([[P.m,X(h)],[P.c+k,'']])+'</span><span>, x &lt; '+fmt(P.p+h)+'</span><span>'+poly([[P.a,X(h)+'²'],[P.d+k,'']])+'</span><span>, x ≥ '+fmt(P.p+h)+'</span></span>',
+    props:(P,h,k)=>{ const yl=P.m*P.p+P.c, yr=P.a*P.p*P.p+P.d; return [['Domain','ℝ','ℝ'],['Batas aturan','x = '+fmt(P.p),'x = '+fmt(P.p+h)],['Titik penuh',pt(P.p,yr),pt(P.p+h,yr+k)],['Titik kosong',pt(P.p,yl),pt(P.p+h,yl+k)],['Kontinu?',yl===yr?'ya':'tidak (lompat '+fmt(yr-yl)+')',yl===yr?'ya':'tidak (tetap)']]; },
+    note:'Batas antar-aturan ikut bergeser: syarat x < p menjadi x − h < p, yaitu x < p + h. Bagian ini sering terlewat saat menulis fungsi hasil translasi.'},
+  irrational:{ name:'Irasional', form:'f(x) = a√(bx)',
+    params:[{id:'a',def:1,hint:'a < 0 kurva ke bawah'},{id:'b',def:1,hint:'b ≠ 0, b < 0 kurva ke kiri'}],
+    pieces:P=> P.b>0 ? [{a:0,b:INF,fn:x=>P.a*Math.sqrt(Math.max(0,P.b*x)),startDot:'closed'}] : P.b<0 ? [{a:-INF,b:0,fn:x=>P.a*Math.sqrt(Math.max(0,P.b*x)),endDot:'closed'}] : [],
+    base:P=>x=> P.b*x>=0 && P.b!==0 ? P.a*Math.sqrt(P.b*x) : NaN,
+    xs:P=>{const s=P.b<0?-1:1; return [0,1,4,9].map(v=>s*v/Math.abs(P.b||1));}, anchor:()=>[0,0],
+    eq:(P,h,k)=>{ const ins = P.b===1 ? inner(h,false) : poly([[P.b,X(h)]]); const rad = ins==='x' ? '√x' : '√('+ins+')'; return poly([[P.a,rad],[k,'']]); },
+    props:(P,h,k)=>{ const dop=P.b>0?'≥':'≤', rop=P.a>0?'≥':'≤'; return [['Domain','x '+dop+' 0','x '+dop+' '+fmt(h)],['Range','y '+rop+' 0','y '+rop+' '+fmt(k)],['Titik awal',pt(0,0),pt(h,k)]]; },
+    warn:P=> P.b===0?'b = 0 membuat fungsi bernilai 0 saja. Pilih b ≠ 0.': P.a===0?'a = 0 membuat grafik berupa titik/garis datar.':'',
+    note:'Syarat di bawah akar b(x − h) ≥ 0 menentukan domain baru. Titik awal kurva akar selalu berpindah ke (h, k).'},
+  rational:{ name:'Rasional', form:'f(x) = (ax + b) / (cx + d)',
+    params:[{id:'a',def:0},{id:'b',def:1},{id:'c',def:1,hint:'c ≠ 0'},{id:'d',def:0}],
+    pieces:P=>{ const fn=x=>(P.a*x+P.b)/(P.c*x+P.d); if(!P.c) return [{a:-INF,b:INF,fn}]; const x0=-P.d/P.c; return [{a:-INF,b:x0,fn},{a:x0,b:INF,fn}]; },
+    xs:P=>{ const x0=P.c?Math.round(-P.d/P.c*2)/2:0; return [x0-2,x0-1,x0-0.5,x0+0.5,x0+1,x0+2].filter(x=>P.c*x+P.d!==0); },
+    asym:P=> P.c ? {x:-P.d/P.c, y:P.a/P.c} : null,
+    anchor:P=> P.c ? [-P.d/P.c, P.a/P.c] : [0, P.d?P.b/P.d:0],
+    eq:(P,h,k)=>{ const num=[[P.a,X(h)],[P.b,'']], den=[[P.c,X(h)],[P.d,'']]; return wrap(num)+' / '+wrap(den)+kp(k); },
+    props:(P,h,k)=>{ if(!P.c) return [['Catatan','c = 0','bukan fungsi rasional']]; const x0=-P.d/P.c, y0=P.a/P.c;
+      return [['Domain','x ≠ '+fmt(x0),'x ≠ '+fmt(x0+h)],['Range','y ≠ '+fmt(y0),'y ≠ '+fmt(y0+k)],['Asimtot tegak','x = '+fmt(x0),'x = '+fmt(x0+h)],['Asimtot datar','y = '+fmt(y0),'y = '+fmt(y0+k)],['Pusat simetri',pt(x0,y0),pt(x0+h,y0+k)]]; },
+    warn:P=> !P.c ? 'c = 0 membuat fungsi ini menjadi linear (tidak ada asimtot).' : (P.a*P.d-P.b*P.c===0 ? 'ad − bc = 0 membuat grafik berupa garis datar berlubang.' : ''),
+    note:'Asimtot tegak x = −d/c bergeser sejauh h, asimtot datar y = a/c bergeser sejauh k. Titik potong kedua asimtot berpindah ke (−d/c + h, a/c + k).'}
+};
+const P0 = key => Object.fromEntries(F[key].params.map(p=>[p.id,p.def]));
+const state = { fn:'quadratic', h:2, k:1, orig:true, vec:true, pts:true, target:null, tries:0, correct:0, P:{} };
+Object.keys(F).forEach(key=>state.P[key]=P0(key));
+const curP = () => state.P[state.fn];
+const baseOf = (key,P) => F[key].base ? F[key].base(P) : (x=>{ for(const p of F[key].pieces(P)){ if(x>=p.a && x<p.b) return p.fn(x); } return NaN; });
+
+// --- UI: pilih fungsi
+const chips = document.getElementById('chips');
+Object.entries(F).forEach(([key,d])=>{
+  const b=document.createElement('button'); b.type='button'; b.className='chip'; b.id='chip-'+key;
+  b.innerHTML=d.name+'<small>'+d.form.replace('f(x) = ','').replace(/\{.*\}/,'dua aturan')+'</small>'; b.setAttribute('aria-pressed', key===state.fn);
+  b.onclick=()=>{ state.fn=key; [...chips.children].forEach(c=>c.setAttribute('aria-pressed', c===b)); buildCoefs(); if(state.target){ newChallenge(); } update(); };
+  chips.appendChild(b);
+});
+
+// --- UI: koefisien
+const coefBox=document.getElementById('coefs');
+function buildCoefs(){
+  const d=F[state.fn], P=curP();
+  document.getElementById('formLine').textContent=d.form;
+  coefBox.innerHTML='';
+  d.params.forEach(p=>{
+    const w=document.createElement('div'); w.className='coef';
+    const id='p-'+state.fn+'-'+p.id;
+    w.innerHTML='<label for="'+id+'">'+p.id+'</label><button type="button" aria-label="kurangi '+p.id+'">−</button><input type="number" id="'+id+'" step="0.5" value="'+P[p.id]+'" inputmode="decimal"><button type="button" aria-label="tambah '+p.id+'">+</button>'+(p.hint?'<span class="ch">'+p.hint+'</span>':'');
+    const inp=w.querySelector('input'), [minus,plus]=w.querySelectorAll('button');
+    const set=v=>{ v=Math.max(-20,Math.min(20,r2(v))); P[p.id]=v; inp.value=v; update(); };
+    inp.addEventListener('input',()=>{ const v=parseFloat(inp.value.replace(',','.')); if(!isNaN(v)){ P[p.id]=Math.max(-20,Math.min(20,v)); update(); } });
+    inp.addEventListener('change',()=>{ inp.value=P[p.id]; });
+    minus.onclick=()=>set(P[p.id]-0.5); plus.onclick=()=>set(P[p.id]+0.5);
+    coefBox.appendChild(w);
+  });
+}
+document.getElementById('coefReset').onclick=()=>{ state.P[state.fn]=P0(state.fn); buildCoefs(); update(); };
+document.getElementById('coefRand').onclick=()=>{
+  const P=curP(); const ri=(lo,hi)=>Math.round(Math.random()*(hi-lo)+lo);
+  F[state.fn].params.forEach(p=>{ let v=ri(-3,3); if(['a','m','c'].includes(p.id) && v===0) v=1; P[p.id]=v; });
+  if(state.fn==='exponential'){ P.a=ri(1,3)*(Math.random()<.3?-1:1); P.b=[0.5,2,3,1.5][ri(0,3)]; }
+  if(state.fn==='irrational' && P.b===0) P.b=1;
+  if(state.fn==='rational' && P.a*P.d-P.b*P.c===0) P.b+=1;
+  buildCoefs(); update();
+};
+
+// --- UI: translasi
+const hIn=document.getElementById('h'), kIn=document.getElementById('k');
+hIn.oninput=()=>{state.h=+hIn.value;update();}; kIn.oninput=()=>{state.k=+kIn.value;update();};
+document.getElementById('reset').onclick=()=>setHK(0,0);
+document.getElementById('rand').onclick=()=>setHK(Math.round(Math.random()*12-6),Math.round(Math.random()*12-6));
+['Orig','Vec','Pts'].forEach(n=>{const el=document.getElementById('t'+n); el.onchange=()=>{state[n.toLowerCase()]=el.checked; draw();};});
+function setHK(h,k){ state.h=clamp(h); state.k=clamp(k); update(); }
+function clamp(v){ return Math.max(-8,Math.min(8,Math.round(v*2)/2)); }
+
+// --- Render teks
+function update(){
+  const {fn,h,k}=state, d=F[fn], P=curP();
+  hIn.value=h; kIn.value=k;
+  document.getElementById('hOut').textContent=fmt(h);
+  document.getElementById('kOut').textContent=fmt(k);
+  const w=d.warn?d.warn(P):''; const we=document.getElementById('warn'); we.textContent=w; we.hidden=!w;
+  document.getElementById('eq').innerHTML =
+    '<div><span class="lbl">f(x) = </span><span class="f">'+d.eq(P,0,0)+'</span></div>'+
+    '<div><span class="lbl">g(x) = </span><span class="g">'+d.eq(P,h,k)+'</span></div>';
+  document.getElementById('vecCol').innerHTML='<span>'+fmt(h)+'</span><span>'+fmt(k)+'</span>';
+  const dir=[]; if(h) dir.push((h>0?'kanan ':'kiri ')+fmt(Math.abs(h))); if(k) dir.push((k>0?'atas ':'bawah ')+fmt(Math.abs(k)));
+  document.getElementById('vecTxt').textContent = dir.length ? 'geser '+dir.join(', ') : 'tidak bergeser';
+  document.getElementById('props').innerHTML = d.props(P,h,k).map(([t,a,b])=>'<dt>'+t+'</dt><dd><span class="from">'+a+'</span> → <span class="to">'+b+'</span></dd>').join('');
+  const f=baseOf(fn,P);
+  const rows=d.xs(P).map(a=>[a,f(a)]).filter(([,y])=>isFinite(y));
+  document.getElementById('tbl').innerHTML='<thead><tr><th>Titik pada f</th><th></th><th>Titik pada g</th></tr></thead><tbody>'+
+    (rows.length ? rows.map(([a,y])=>'<tr><td>'+pt(a,y)+'</td><td class="arrow">→</td><td class="to">'+pt(a+h,y+k)+'</td></tr>').join('') : '<tr><td colspan="3">Tidak ada titik untuk nilai ini.</td></tr>')+'</tbody>';
+  document.getElementById('concept').innerHTML='<p style="margin:0">Translasi oleh vektor T = (h, k) menggeser setiap titik grafik tanpa mengubah bentuknya. Jika y = f(x) ditranslasi, hasilnya y = f(x − h) + k. Mengubah nilai a, b, c, … mengubah bentuk f, sedangkan h dan k hanya memindahkan posisinya.</p><ul><li>Tanda di dalam fungsi terbalik: f(x − 3) bergeser ke <b>kanan</b> 3, f(x + 3) ke <b>kiri</b> 3.</li><li>Tanda di luar fungsi langsung: f(x) + 2 naik 2, f(x) − 2 turun 2.</li><li><b>'+d.name+':</b> '+d.note+'</li></ul>';
+  draw();
+}
+
+// --- Kanvas
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const R=10; let W=0, dpr=1;
+const sx=x=>(x+R)/(2*R)*W, sy=y=>(R-y)/(2*R)*W;
+const wx=px=>px/W*2*R-R, wy=py=>R-py/W*2*R;
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function resize(){
+  const box=cv.parentElement; W=Math.min(box.clientWidth-16, 680); dpr=window.devicePixelRatio||1;
+  cv.style.width=W+'px'; cv.style.height=W+'px'; cv.width=W*dpr; cv.height=W*dpr; draw();
+}
+function line(x1,y1,x2,y2){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+function drawGrid(){
+  ctx.fillStyle=css('--surface'); ctx.fillRect(0,0,W,W);
+  ctx.lineWidth=1;
+  for(let i=-R;i<=R;i++){ ctx.strokeStyle= i%5===0 ? css('--grid-strong') : css('--grid'); line(sx(i)+.5,0,sx(i)+.5,W); line(0,sy(i)+.5,W,sy(i)+.5); }
+  ctx.strokeStyle=css('--axis'); ctx.lineWidth=1.5; line(sx(0),0,sx(0),W); line(0,sy(0),W,sy(0));
+  ctx.fillStyle=css('--muted'); ctx.font='11px '+css('--f-mono'); ctx.textAlign='center'; ctx.textBaseline='top';
+  for(let i=-R+2;i<R;i+=2){ if(i===0) continue; ctx.fillText(fmt(i), sx(i), sy(0)+4); }
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(let i=-R+2;i<R;i+=2){ if(i===0) continue; ctx.fillText(fmt(i), sx(0)-5, sy(i)); }
+  ctx.textAlign='right'; ctx.textBaseline='top'; ctx.fillText('0', sx(0)-4, sy(0)+4);
+  ctx.font='italic 13px '+css('--f-body'); ctx.fillStyle=css('--axis');
+  ctx.textAlign='right'; ctx.fillText('x', W-6, sy(0)+6); ctx.textAlign='left'; ctx.fillText('y', sx(0)+6, 4);
+}
+function dot(x,y,color,open,r=4.5){
+  if(!isFinite(x)||!isFinite(y)) return;
+  ctx.beginPath(); ctx.arc(sx(x),sy(y),r,0,Math.PI*2);
+  if(open){ ctx.fillStyle=css('--surface'); ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=color; ctx.stroke(); }
+  else { ctx.fillStyle=color; ctx.fill(); }
+}
+function plot(key,P,h,k,color,width,dash){
+  const d=F[key]; ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=width; ctx.setLineDash(dash||[]); ctx.lineJoin='round'; ctx.lineCap='round';
+  const step=(2*R)/W/1.5; const dots=[];
+  for(const p of d.pieces(P)){
+    const x0=Math.max(p.a+h,-R-1), x1=Math.min(p.b+h,R+1); if(!(x0<x1)) continue;
+    ctx.beginPath(); let started=false;
+    const eps = isFinite(p.a) ? 1e-6 : 0, eps2 = isFinite(p.b) ? 1e-6 : 0;
+    const sample=[]; for(let x=x0+eps;x<x1-eps2;x+=step) sample.push(x); sample.push(x1-eps2);
+    for(const x of sample){
+      let y=p.fn(x-h)+k; if(!isFinite(y)){started=false;continue;}
+      y=Math.max(-300,Math.min(300,y));
+      if(!started){ctx.moveTo(sx(x),sy(y));started=true;} else ctx.lineTo(sx(x),sy(y));
+    }
+    ctx.stroke();
+    if(p.startDot && isFinite(p.a)) dots.push([p.a+h,p.fn(p.a)+k,p.startDot==='open']);
+    if(p.endDot && isFinite(p.b)) dots.push([p.b+h,p.fn(p.b)+k,p.endDot==='open']);
+  }
+  ctx.restore();
+  dots.forEach(([x,y,o])=>{ if(x>=-R&&x<=R) dot(x,y,color,o, width>2?4.5:3.5); });
+}
+function asymptotes(key,P,h,k,color){
+  const a=F[key].asym && F[key].asym(P); if(!a) return; ctx.save(); ctx.strokeStyle=color; ctx.globalAlpha=.75; ctx.lineWidth=1.5; ctx.setLineDash([6,5]);
+  if('x' in a) line(sx(a.x+h),0,sx(a.x+h),W);
+  if('y' in a) line(0,sy(a.y+k),W,sy(a.y+k));
+  ctx.restore();
+}
+function arrow(x1,y1,x2,y2,color){
+  const X1=sx(x1),Y1=sy(y1),X2=sx(x2),Y2=sy(y2); const L=Math.hypot(X2-X1,Y2-Y1); if(L<4||!isFinite(L)) return;
+  ctx.save(); ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=2.2; line(X1,Y1,X2,Y2);
+  const ang=Math.atan2(Y2-Y1,X2-X1), s=11;
+  ctx.beginPath(); ctx.moveTo(X2,Y2); ctx.lineTo(X2-s*Math.cos(ang-.4),Y2-s*Math.sin(ang-.4)); ctx.lineTo(X2-s*Math.cos(ang+.4),Y2-s*Math.sin(ang+.4)); ctx.closePath(); ctx.fill();
+  ctx.font='600 12px '+css('--f-mono'); ctx.textAlign='left'; ctx.textBaseline='bottom';
+  ctx.fillText('T('+fmt(x2-x1)+', '+fmt(y2-y1)+')', (X1+X2)/2+8, (Y1+Y2)/2-4);
+  ctx.restore();
+}
+function draw(){
+  if(!W) return; ctx.setTransform(dpr,0,0,dpr,0,0);
+  const {fn,h,k}=state, P=curP(); const acc=css('--accent'), org=css('--original'), vec=css('--vector'), tgt=css('--target');
+  drawGrid();
+  if(state.orig){ asymptotes(fn,P,0,0,org); plot(fn,P,0,0,org,2,[7,6]); }
+  if(state.target){ plot(fn,P,state.target.h,state.target.k,tgt,3.5,[10,7]); }
+  asymptotes(fn,P,h,k,acc);
+  plot(fn,P,h,k,acc,3.2);
+  const f=baseOf(fn,P);
+  if(state.pts){ F[fn].xs(P).forEach(a=>{ const y=f(a); if(!isFinite(y)) return; if(state.orig) dot(a,y,org,false,3.5); dot(a+h,y+k,acc,false,3.8); }); }
+  const [ax,ay]=F[fn].anchor(P);
+  if(state.vec){ arrow(ax,ay,ax+h,ay+k,vec); dot(ax+h,ay+k,vec,false,5); }
+}
+
+// --- Seret kurva
+let drag=null;
+cv.addEventListener('pointerdown',e=>{ const r=cv.getBoundingClientRect(); drag={x:wx(e.clientX-r.left),y:wy(e.clientY-r.top),h:state.h,k:state.k}; cv.setPointerCapture(e.pointerId); cv.classList.add('dragging'); });
+cv.addEventListener('pointermove',e=>{ if(!drag) return; const r=cv.getBoundingClientRect(); const nh=clamp(drag.h+wx(e.clientX-r.left)-drag.x), nk=clamp(drag.k+wy(e.clientY-r.top)-drag.y); if(nh!==state.h||nk!==state.k){state.h=nh;state.k=nk;update();} });
+const end=()=>{drag=null;cv.classList.remove('dragging');};
+cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end);
+
+// --- Tantangan
+const cFb=document.getElementById('cFb'), cCheck=document.getElementById('cCheck'), cStop=document.getElementById('cStop');
+function newChallenge(){
+  let th,tk; do{ th=Math.round(Math.random()*12-6); tk=Math.round(Math.random()*10-5); }while((th===0&&tk===0)||(th===state.h&&tk===state.k));
+  state.target={h:th,k:tk}; cFb.textContent='Kurva target: '+F[state.fn].name+'. Cari h dan k-nya.'; cFb.className='feedback';
+  cCheck.disabled=false; cStop.disabled=false; document.getElementById('lgTarget').hidden=false; draw();
+}
+function sameCurve(h1,k1,h2,k2){
+  const f=baseOf(state.fn,curP()); let n=0;
+  for(let x=-7.3;x<=7.3;x+=0.37){ const a=f(x-h1)+k1, b=f(x-h2)+k2; const fa=isFinite(a), fb=isFinite(b); if(fa!==fb) return false; if(fa){ n++; if(Math.abs(a-b)>1e-6) return false; } }
+  return n>0;
+}
+document.getElementById('cNew').onclick=()=>{ setHK(0,0); newChallenge(); };
+cCheck.onclick=()=>{
+  if(!state.target) return; state.tries++;
+  const t=state.target; const ok = (t.h===state.h && t.k===state.k) || sameCurve(state.h,state.k,t.h,t.k);
+  if(ok){ state.correct++; cFb.textContent='Tepat! g(x) = '+F[state.fn].eq(curP(),state.h,state.k).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); cFb.className='feedback ok'; state.target=null; cCheck.disabled=true; document.getElementById('lgTarget').hidden=true; }
+  else { const hints=[]; if(state.h!==t.h) hints.push(state.h<t.h?'kurva perlu ke kanan':'kurva perlu ke kiri'); if(state.k!==t.k) hints.push(state.k<t.k?'kurva perlu naik':'kurva perlu turun'); cFb.textContent='Belum pas: '+hints.join(', ')+'.'; cFb.className='feedback no'; }
+  document.getElementById('cScore').textContent='Benar '+state.correct+' dari '+state.tries+' percobaan';
+  draw();
+};
+cStop.onclick=()=>{ state.target=null; cCheck.disabled=true; cStop.disabled=true; cFb.textContent=''; document.getElementById('lgTarget').hidden=true; draw(); };
+
+new ResizeObserver(resize).observe(cv.parentElement);
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts) document.fonts.ready.then(draw);
+buildCoefs(); update(); resize();
+})();
+</script>
+
+</body></html>
